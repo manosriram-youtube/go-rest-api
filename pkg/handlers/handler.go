@@ -1,26 +1,31 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 )
 
-type GoUser struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+type Hello struct {
+	l *log.Logger
 }
 
-func HandleUser(w http.ResponseWriter, r *http.Request) {
-	var user GoUser
-	w.Header().Set("Content-Type", "application/json")
-	json.NewDecoder(r.Body).Decode(&user)
-	fmt.Println(user)
-	json.NewEncoder(w).Encode(user)
-}
-
-func SayHello(name string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Hello %s", name)
+func NewHello(l *log.Logger) *Hello {
+	return &Hello{
+		l,
 	}
+}
+
+func (h *Hello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.l.Print("Handling Hello requests")
+
+	bdy, err := ioutil.ReadAll(r.Body)
+	h.l.Println(bdy)
+	if err != nil {
+		h.l.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Fprintf(w, "Hello, %s", bdy)
 }
